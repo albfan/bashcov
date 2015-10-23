@@ -45,11 +45,14 @@ module Bashcov
     def read
       @files = {}
 
+      puts "parsing file"
       @read.each_line do |line|
+        puts line
         match = line.match(LINE_REGEXP)
         next if match.nil? # garbage line from multiline instruction
 
         filename = File.expand_path(match[:filename], Bashcov.root_directory)
+        puts filename
 
         lineno = match[:lineno].to_i - 1
         @files[filename] ||= []

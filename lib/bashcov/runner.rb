@@ -18,7 +18,11 @@ module Bashcov
       options.merge!(out: "/dev/null", err: "/dev/null") if Bashcov.options.mute
       env = { "BASH_XTRACEFD" => fd.to_s, "PS4" => Xtrace::PS4 }
 
+      puts env
+      puts @command
+      puts options
       command_pid = Process.spawn env, @command, options # spawn the command
+      system("ps -ef -p %s" % command_pid)
       xtrace_thread = Thread.new { @xtrace.read } # start processing the xtrace output
 
       Process.wait command_pid
@@ -47,7 +51,9 @@ module Bashcov
     # @return [void]
     def inject_xtrace_flag!
       existing_flags = (ENV["SHELLOPTS"] || "").split(":")
+      puts existing_flags
       ENV["SHELLOPTS"] = (existing_flags | ["xtrace"]).join(":")
+      puts "env %s" % ENV["SHELLOPTS"]
     end
 
     # Add files which have not been executed at all (i.e. with no coverage)
@@ -56,6 +62,7 @@ module Bashcov
       return if Bashcov.options.skip_uncovered
 
       Dir["#{Bashcov.root_directory}/**/*.sh"].each do |file|
+        puts "file: %s" % file
         @coverage[file] ||= [] # empty coverage array
       end
     end
@@ -63,6 +70,7 @@ module Bashcov
     # @return [void]
     def expunge_invalid_files!
       @coverage.each_key do |file|
+        puts file
         next if File.file? file
 
         @coverage.delete file
